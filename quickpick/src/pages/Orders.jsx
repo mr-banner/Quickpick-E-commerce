@@ -6,16 +6,20 @@ import Title from "../components/Title";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
+import YourOrdersLoader from "../components/YourOrdersLoader"
 const Orders = () => {
   const { products, backendUrl,token } = useContext(ShopContext);
+  const [loading, setLoading] = useState(true);
 
   const[orderData, setOrderData] = useState([]);
 
   const fetchOrder = async ()=>{
+    setLoading(true);
     if(!token) return;
     try {
       const response = await axios.post(`${backendUrl}/api/v1/orders/userOrders`,{},{headers:{token}})
       if(response.status === 200){
+        setLoading(false);
         setOrderData(response.data.data)
         // console.log(response.data.data[0].address.firstName);
         
@@ -28,6 +32,10 @@ const Orders = () => {
   useEffect(()=>{
     fetchOrder();
   },[token])
+
+  if (loading) {
+    return <YourOrdersLoader />; // Show the loading screen until data is ready
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
