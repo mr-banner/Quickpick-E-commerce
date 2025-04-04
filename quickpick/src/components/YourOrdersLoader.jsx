@@ -7,7 +7,7 @@ function YourOrdersLoader() {
       <motion.div
         className="relative flex flex-col items-center"
         animate={{
-          rotate: [0, 15, 0], // Shopping bag swaying
+          rotate: [0, 15, 0], 
         }}
         transition={{
           repeat: Infinity,
