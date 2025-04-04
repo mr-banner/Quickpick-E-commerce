@@ -199,6 +199,10 @@ const Navbar = () => {
           >
             ORDERS
           </NavLink>
+          { token && <a  className="text-black py-2 pl-6 border" onClick={handleClick} href="">
+
+            LOGOUT
+        </a>}
         </div>
       </div>
     </div>
