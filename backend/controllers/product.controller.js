@@ -7,55 +7,41 @@ import {
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 
+// Create Product
 const createProduct = asyncHandler(async (req, res) => {
+  const {
+    name,
+    description,
+    price,
+    category,
+    subCategory,
+    sizes,
+    bestSeller,
+  } = req.body;
+
+  if (!name || !description || !price || !category || !subCategory || !sizes) {
+    throw new ApiError(400, false, "Please fill all the required fields");
+  }
+
+  if (!req.files || Object.keys(req.files).length === 0) {
+    throw new ApiError(400, false, "No images uploaded");
+  }
+
+  let uploadedImagePublicIds = [];
+  let imagesUrl = [];
+
   try {
-    const {
-      name,
-      description,
-      price,
-      category,
-      subCategory,
-      sizes,
-      bestSeller,
-    } = req.body;
+    const imageFiles = ["image1", "image2", "image3", "image4"]
+      .map((key) => req.files?.[key]?.[0])
+      .filter(Boolean);
 
-    if (
-      !name ||
-      !description ||
-      !price ||
-      !category ||
-      !subCategory ||
-      !sizes
-    ) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Please fill all the fields" });
-    }
-
-    if (!req.files || Object.keys(req.files).length === 0) {
-      return res
-        .status(400)
-        .json({ success: false, message: "No images uploaded" });
-    }
-
-    let uploadedImages = [];
-    let imagesUrl = await Promise.all(
-      ["image1", "image2", "image3", "image4"]
-        .map((key) => req.files?.[key]?.[0])
-        .filter(Boolean)
-        .map(async (item) => {
-          try {
-            let response = await uploadOnCloudinary(item.path);
-            uploadedImages.push(response.public_id);
-            return response.secure_url;
-          } catch (err) {
-            console.error("Cloudinary Upload Error:", err.message);
-            return null;
-          }
-        })
+    imagesUrl = await Promise.all(
+      imageFiles.map(async (file) => {
+        const response = await uploadOnCloudinary(file.path);
+        uploadedImagePublicIds.push(response.public_id);
+        return response.secure_url;
+      })
     );
-
-    imagesUrl = imagesUrl.filter(Boolean);
 
     const product = await Product.create({
       name,
@@ -64,89 +50,84 @@ const createProduct = asyncHandler(async (req, res) => {
       category,
       subCategory,
       sizes: JSON.parse(sizes),
-      bestSeller: bestSeller === "true"|| bestSeller === true,
+      bestSeller: bestSeller === "true" || bestSeller === true,
       image: imagesUrl,
     });
 
     return res
-      .status(200)
-      .json(new ApiResponse(200, true, product, "Product added successfully"));
+      .status(201)
+      .json(new ApiResponse(201, true, product, "Product added successfully"));
   } catch (error) {
-    console.error("Error in createProduct:", error);
+    // Cleanup cloudinary uploads if any failed
     await Promise.all(
-      uploadedImages.map(async (publicId) => {
-        await deleteFromCloudinary(publicId);
-      })
+      uploadedImagePublicIds.map((publicId) => deleteFromCloudinary(publicId))
     );
 
-    return res.status(500).json({ success: false, message: error.message });
+    throw new ApiError(500, false, "Failed to create product");
   }
 });
 
-// get all products
+// Get All Products
 const getAllProducts = asyncHandler(async (req, res) => {
   const products = await Product.find();
-  return res.status(200).json(new ApiResponse(200, true, products));
+  return res
+    .status(200)
+    .json(new ApiResponse(200, true, products, "All products fetched"));
 });
 
-// get a single product
+// Get Single Product
 const getSingleProduct = asyncHandler(async (req, res) => {
-  try {
-    const { id } = req.body;
+  const { id } = req.body;
 
-    const product = await Product.findById(id);
-    if (!product) {
-      return res
-        .status(400)
-        .json(new ApiError(400, false, "Product does not exist"));
-    }
-
-    return res
-      .status(200)
-      .json(
-        new ApiResponse(200, true, product, "Product retrieved successfully")
-      );
-  } catch (error) {
-    return res
-      .status(500)
-      .json(new ApiError(500, false, "Somthing went wrong"));
+  const product = await Product.findById(id);
+  if (!product) {
+    throw new ApiError(404, false, "Product does not exist");
   }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, true, product, "Product retrieved successfully"));
 });
 
-const deleteProduct = asyncHandler(async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    if (!id) {
-      return next(new ApiError(400, false, "Product ID is required"));
-    }
-
-    const product = await Product.findById(id);
-    if (!product) {
-      return next(new ApiError(400, false, "Product does not exist"));
-    }
-
-    if (product.image && Array.isArray(product.image) && product.image.length > 0) {
-
-      const deletePromises = product.image.map(async (imageUrl) => {
-        try {
-          const publicId = imageUrl.split("/").slice(7).join("/").split(".")[0];
-          await deleteFromCloudinary(publicId);
-        } catch (error) {
-          console.error("Error deleting image from Cloudinary:", error);
-        }
-      });
-      await Promise.all(deletePromises);
-    }
-    await Product.findByIdAndDelete(id);
-
-    return res
-      .status(200)
-      .json(new ApiResponse(200, true, null, "Product and images deleted successfully"));
-  } catch (error) {
-    console.error("Error in deleteProduct:", error);
-    next(new ApiError(500, false, error.message || "Internal Server Error"));
+// Delete Product
+const deleteProduct = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  if (!id) {
+    throw new ApiError(400, false, "Product ID is required");
   }
+
+  const product = await Product.findById(id);
+  if (!product) {
+    throw new ApiError(404, false, "Product not found");
+  }
+
+  // Delete all images from Cloudinary
+  if (product.image?.length) {
+    const deletePromises = product.image.map(async (imageUrl) => {
+      try {
+        // Extract public_id from URL
+        const parts = imageUrl.split("/");
+        const filename = parts.pop().split(".")[0];
+        const folder = parts.slice(parts.indexOf("upload") + 1).join("/");
+        const publicId = `${folder}/${filename}`;
+        await deleteFromCloudinary(publicId);
+      } catch (error) {
+        console.error("Failed to delete Cloudinary image:", error.message);
+      }
+    });
+
+    await Promise.all(deletePromises);
+  }
+
+  await Product.findByIdAndDelete(id);
+  return res
+    .status(200)
+    .json(new ApiResponse(200, true, null, "Product and images deleted successfully"));
 });
 
-
-export { createProduct, getAllProducts, getSingleProduct, deleteProduct };
+export {
+  createProduct,
+  getAllProducts,
+  getSingleProduct,
+  deleteProduct,
+};

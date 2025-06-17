@@ -1,11 +1,19 @@
-import {Router} from 'express';
-import { adminLogin, loginUser, regiterUser } from '../controllers/user.controller.js';
+import { Router } from 'express';
+import {
+  adminLogin,
+  loginUser,
+  registerUser, // ✅ Fixed typo
+} from '../controllers/user.controller.js';
 
 const router = Router();
 
-router.route("/register").post(regiterUser);
-router.route("/login").post(loginUser);
-router.route("/admin").post(adminLogin);
+// 🧑 Register a new user
+router.post('/register', registerUser);
 
+// 🔐 User login
+router.post('/login', loginUser);
+
+// 🛡️ Admin login
+router.post('/admin/login', adminLogin);
 
 export default router;

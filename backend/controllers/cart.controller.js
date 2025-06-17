@@ -1,61 +1,77 @@
 import { User } from "../models/users.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 const addToCart = asyncHandler(async (req, res) => {
-  try {
-    const { userId, itemId, size } = req.body;
-    const user = await User.findById(userId);
-    let cartData = await user.cartData;
+  const { userId, itemId, size } = req.body;
 
-    if (cartData[itemId]) {
-      if (cartData[itemId][size]) {
-        cartData[itemId][size] += 1;
-      } else {
-        cartData[itemId][size] = 1;
-      }
-    } else {
-      cartData[itemId] = {};
-      cartData[itemId][size] = 1;
-    }
-
-    await User.findByIdAndUpdate(userId, { cartData });
-
-    return res
-      .status(200)
-      .json(new ApiResponse(200, true, "Added to cart successfully"));
-  } catch (error) {
-    return res.status(500).json(new ApiError(500, false, error.message));
+  if (!userId || !itemId || !size) {
+    throw new ApiError(400, "Missing required fields");
   }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const cartData = user.cartData || {};
+
+  if (!cartData[itemId]) {
+    cartData[itemId] = {};
+  }
+
+  cartData[itemId][size] = (cartData[itemId][size] || 0) + 1;
+
+  await User.findByIdAndUpdate(userId, { cartData });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, null, "Added to cart successfully"));
 });
 
 const updateCart = asyncHandler(async (req, res) => {
-  try {
-    const { userId, itemId, size, quantity } = req.body;
-    const user = await User.findById(userId);
-    let cartData = await user.cartData;
+  const { userId, itemId, size, quantity } = req.body;
 
-    cartData[itemId][size] = quantity;
-    await User.findByIdAndUpdate(userId, { cartData });
-
-    return res.status(200).json(new ApiResponse(200, true, "cart updated"));
-  } catch (error) {
-    return res.status(500).json(new ApiError(500, false, error.message));
+  if (!userId || !itemId || !size || quantity === undefined) {
+    throw new ApiError(400, "Missing required fields");
   }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const cartData = user.cartData || {};
+
+  if (!cartData[itemId]) {
+    cartData[itemId] = {};
+  }
+
+  cartData[itemId][size] = quantity;
+
+  await User.findByIdAndUpdate(userId, { cartData });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, null, "Cart updated successfully"));
 });
 
 const getCart = asyncHandler(async (req, res) => {
-    try {
-        const {userId} = req.body;
-        const user = await User.findById(userId)
-        const cart = await user.cartData;
+  const { userId } = req.body;
 
-        return res.status(200).json(
-            new ApiResponse(200,true,cart)
-        )
-    } catch (error) {
-    return res.status(500).json(new ApiError(500, false, error.message));
-    }
+  if (!userId) {
+    throw new ApiError(400, "User ID is required");
+  }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const cart = user.cartData || {};
+
+  return res.status(200).json(new ApiResponse(200, cart, "Cart fetched"));
 });
 
 export { addToCart, updateCart, getCart };
