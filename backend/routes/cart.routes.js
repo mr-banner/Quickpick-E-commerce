@@ -1,10 +1,11 @@
-import {Router} from "express"
-import { addToCart,updateCart,getCart } from "../controllers/cart.controller.js"
-import { authUser } from "../middleware/auth.middleware.js";
+import { Router } from 'express';
+import { addToCart, updateCart, getCart } from '../controllers/cart.controller.js';
+import { authUser } from '../middleware/auth.middleware.js';
+
 const router = Router();
 
-router.route("/add-cart").post(authUser,addToCart)
-router.route("/update-cart").post(authUser,updateCart);
-router.route("/get-cart").post(authUser,getCart)
+router.post('/add-cart', authUser, addToCart);
+router.post('/update-cart', authUser, updateCart);
+router.post('/get-cart', authUser, getCart);
 
-export default router
+export default router;
