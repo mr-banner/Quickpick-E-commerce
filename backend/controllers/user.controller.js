@@ -9,7 +9,7 @@ const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET);
 };
 
-const regiterUser = asyncHandler(async (req, res) => {
+const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
   if ([name, email, password].some((field) => field.trim() === "")) {
@@ -119,4 +119,4 @@ const adminLogin = asyncHandler(async (req,res) =>{
   }
 })
 
-export { regiterUser, loginUser, adminLogin };
+export { registerUser,loginUser, adminLogin };
