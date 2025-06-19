@@ -72,7 +72,7 @@ const getAllProducts = asyncHandler(async (req, res) => {
   const products = await Product.find();
   return res
     .status(200)
-    .json(new ApiResponse(200, true, products, "All products fetched"));
+    .json(new ApiResponse(200,products,true, "All products fetched"));
 });
 
 // Get Single Product
