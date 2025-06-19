@@ -14,18 +14,17 @@ import { authUser } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
-// 🔐 Admin Routes
-router.post('/all-orders', adminAuth, allOrders);
-router.post('/update-status', adminAuth, updateOrder);
+router.route("/allOrders").post(adminAuth, allOrders);
+router.route("/update-status").post(adminAuth, updateOrder);
 
-// 💳 Payment Routes
-router.post('/place-order', authUser, placeOrder);
-router.post('/stripe', authUser, placeOrderStripe);
-router.post('/razorpay', authUser, placeOrderRazorpay);
-router.post('/verify-razorpay', authUser, verifyRazorpay);
+//payment methods
+router.route("/place-order").post(authUser, placeOrder);
+router.route("/stripe").post(authUser, placeOrderStripe);
+router.route("/razorpay").post(authUser, placeOrderRazorpay);
+router.route("/verifyRazorpay").post(authUser,verifyRazorpay)
 
-// 👤 User Routes
-router.post('/user-orders', authUser, userOrders);
-router.get('/track-order/:orderId', authUser, trackOrder);
+//user features
+router.route("/userOrders").post(authUser, userOrders);
+router.route("/trackOrder/:orderId").get(authUser, trackOrder);
 
 export default router;

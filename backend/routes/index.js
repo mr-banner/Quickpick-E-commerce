@@ -8,7 +8,7 @@ import orderRout from './orders.routes.js'
 
 const route = Router()
 
-route.use('/api/v1/health', healthCheck)
+route.use('/api/v1/healthCheck', healthCheck)
 route.use('/api/v1/cart', cartRout)
 route.use('/api/v1/products', productRout)
 route.use('/api/v1/users', userRout)

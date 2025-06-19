@@ -14,6 +14,6 @@ router.post('/register', registerUser);
 router.post('/login', loginUser);
 
 // 🛡️ Admin login
-router.post('/admin/login', adminLogin);
+router.post('/admin/', adminLogin);
 
 export default router;
