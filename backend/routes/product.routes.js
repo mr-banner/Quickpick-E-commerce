@@ -24,7 +24,7 @@ router.post(
 );
 
 // 📦 Get All Products
-router.get('/all', getAllProducts);
+router.get('/getAllProducts', getAllProducts);
 
 // 🔍 Get Single Product
 router.post('/single', getSingleProduct);
