@@ -95,8 +95,8 @@ const loginUser = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         200,
-        true,
         { loggedUser, token },
+        true,
         "User logged in successfully"
       )
     );
@@ -110,7 +110,7 @@ const adminLogin = asyncHandler(async (req,res) =>{
     }
     if(email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD){
       const token = jwt.sign(email+password, process.env.JWT_SECRET);
-      return res.status(200).json(new ApiResponse(200,true,token,"Admin logged in successful"));
+      return res.status(200).json(new ApiResponse(200,token,true,"Admin logged in successful"));
     }else{
       return res.status(400).json(new ApiError(400,false,"Invalid Credentials"));
     }

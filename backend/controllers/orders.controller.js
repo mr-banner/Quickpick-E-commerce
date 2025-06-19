@@ -85,7 +85,7 @@ const userOrders = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, true, orders, "User orders fetched successfully"));
+    .json(new ApiResponse(200, orders,true,  "User orders fetched successfully"));
 });
 
 // Update Order Status (Admin)
@@ -95,7 +95,7 @@ const updateOrder = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, true, null, "Order status updated"));
+    .json(new ApiResponse(200,  null,true, "Order status updated"));
 });
 
 // Track Specific Order
@@ -109,7 +109,7 @@ const trackOrder = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, true, order, "Order details fetched successfully"));
+    .json(new ApiResponse(200,  order,true, "Order details fetched successfully"));
 });
 
 // Verify Razorpay Payment
@@ -125,12 +125,12 @@ const verifyRazorpay = asyncHandler(async (req, res) => {
 
     return res
       .status(200)
-      .json(new ApiResponse(200, true, null, "Payment successful"));
+      .json(new ApiResponse(200, null,true,  "Payment successful"));
   }
 
   return res
     .status(400)
-    .json(new ApiResponse(400, false, null, "Payment failed"));
+    .json(new ApiResponse(400,null, false, "Payment failed"));
 });
 
 export {
